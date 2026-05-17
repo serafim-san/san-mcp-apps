@@ -17,6 +17,9 @@ dependencies:
   san-webkit-next:
     specifier: github:santiment/san-webkit#lib-64bf6a43-070526
     version: github.com/santiment/san-webkit/36afbf68e5829adb878d2bcffafd4dfd1d3be191(@amplitude/rrweb@2.1.1)(@floating-ui/dom@1.7.6)(@melt-ui/svelte@0.86.6)(@sveltejs/adapter-auto@3.3.1)(@sveltejs/adapter-node@5.5.4)(@sveltejs/kit@2.60.1)(@sveltejs/vite-plugin-svelte@7.1.2)(@types/react@19.2.14)(@wagmi/connectors@5.11.2)(@wagmi/core@2.21.2)(bits-ui@0.21.16)(estree-walker@3.0.3)(graphql@16.14.0)(highlight.js@11.11.1)(indicatorts@2.2.2)(lottie-web@5.13.0)(marked-highlight@2.2.4)(marked@15.0.12)(mathjs@14.9.1)(monaco-editor@0.52.2)(phoenix@1.8.7)(photoswipe@5.4.4)(react@18.3.1)(rxjs@7.8.2)(svelte@5.55.7)(tailwind-merge@2.6.1)(tailwindcss@3.4.19)(typescript@6.0.3)(uuid@11.1.1)(viem@2.49.3)(vite@8.0.13)(wagmi@2.19.5)
+  tailwind-variants:
+    specifier: ^3.2.2
+    version: 3.2.2(tailwind-merge@2.6.1)(tailwindcss@3.4.19)
   tailwindcss:
     specifier: ^3.4.19
     version: 3.4.19
@@ -6977,6 +6980,20 @@ packages:
       tailwindcss: '*'
     dependencies:
       tailwind-merge: 2.5.4
+      tailwindcss: 3.4.19
+    dev: false
+
+  /tailwind-variants@3.2.2(tailwind-merge@2.6.1)(tailwindcss@3.4.19):
+    resolution: {integrity: sha512-Mi4kHeMTLvKlM98XPnK+7HoBPmf4gygdFmqQPaDivc3DpYS6aIY6KiG/PgThrGvii5YZJqRsPz0aPyhoFzmZgg==}
+    engines: {node: '>=16.x', pnpm: '>=7.x'}
+    peerDependencies:
+      tailwind-merge: '>=3.0.0'
+      tailwindcss: '*'
+    peerDependenciesMeta:
+      tailwind-merge:
+        optional: true
+    dependencies:
+      tailwind-merge: 2.6.1
       tailwindcss: 3.4.19
     dev: false
 
