@@ -1,16 +1,12 @@
 <script lang="ts">
   import { tv } from 'tailwind-variants'
+  import type { Story } from './contract'
 
   const {
     story,
     onclick,
   }: {
-    story: {
-      title: string
-      bullish_sentiment_ratio: number
-      bearish_sentiment_ratio: number
-      score: number
-    }
+    story: Story
     onclick: () => void
   } = $props()
 

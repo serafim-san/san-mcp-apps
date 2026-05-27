@@ -1,20 +1,24 @@
 <script lang="ts">
   import Button from "san-webkit-next/ui/core/Button";
   import { MOCK_DATA } from "./mock-data";
+  import type { TrendingStoriesData } from "../widgets/social-trends/contract";
 
   let iframeEl = $state<HTMLIFrameElement>();
   let widgetUrl = $state("/widgets/social-trends.html");
   let iframeHeight = $state(0);
 
-  function sendToolResult(data: object) {
-    iframeEl?.contentWindow?.postMessage(
-      {
-        jsonrpc: "2.0",
-        method: "ui/notifications/tool-result",
-        params: { structuredContent: data },
-      },
-      "*",
-    );
+  function postToWidget(method: string, params: object) {
+    iframeEl?.contentWindow?.postMessage({ jsonrpc: "2.0", method, params }, "*");
+  }
+
+  function deliverToolResult(data: TrendingStoriesData) {
+    // Real Claude sends tool-input first, then tool-result.
+    postToWidget("ui/notifications/tool-input", { arguments: { time_period: data.time_period } });
+    postToWidget("ui/notifications/tool-result", {
+      content: [{ type: "text", text: JSON.stringify(data) }],
+      structuredContent: data,
+      isError: false,
+    });
   }
 
   window.addEventListener("message", (e) => {
@@ -26,18 +30,32 @@
         {
           jsonrpc: "2.0",
           id: msg.id,
-          result: { protocolVersion: "2026-01-26", hostCapabilities: {} },
+          result: {
+            protocolVersion: "2026-01-26",
+            hostCapabilities: {},
+            hostInfo: { name: "san-mcp-apps-harness", version: "0.0.0" },
+            hostContext: {},
+          },
         },
         "*",
       );
     }
 
     if (msg.method === "ui/notifications/initialized") {
-      sendToolResult(MOCK_DATA);
+      deliverToolResult(MOCK_DATA);
     }
 
     if (msg.method === "ui/notifications/size-changed" && msg.params?.height) {
       iframeHeight = msg.params.height;
+    }
+
+    if (msg.method === "ui/message" && msg.id != null) {
+      // Acknowledge sendMessage from widget so its promise resolves.
+      iframeEl?.contentWindow?.postMessage(
+        { jsonrpc: "2.0", id: msg.id, result: {} },
+        "*",
+      );
+      console.info("[harness] widget sent message:", msg.params);
     }
   });
 </script>
@@ -54,7 +72,7 @@
     <Button
       variant="fill"
       class="w-full justify-start focus:outline-none"
-      onclick={() => sendToolResult(MOCK_DATA)}
+      onclick={() => deliverToolResult(MOCK_DATA)}
     >
       ↺ Resend mock data
     </Button>
@@ -62,7 +80,7 @@
     <Button
       variant="border"
       class="w-full justify-start text-rhino focus:outline-none"
-      onclick={() => sendToolResult({ ...MOCK_DATA, trending_stories: [] })}
+      onclick={() => deliverToolResult({ ...MOCK_DATA, trending_stories: [] })}
     >
       Send empty data
     </Button>

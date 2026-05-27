@@ -1,38 +1,66 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte'
-  import { initMcpApp, onToolResult, sendSizeChanged, request } from '../../lib/mcp-protocol'
+  import { onMount } from 'svelte'
+  import {
+    App,
+    applyDocumentTheme,
+    applyHostFonts,
+    applyHostStyleVariables,
+    type McpUiHostContext,
+  } from '@modelcontextprotocol/ext-apps'
+  import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
   import StoryCard from './StoryCard.svelte'
+  import type { Story, TrendingStoriesData } from './contract'
 
-  type Story = {
-    title: string
-    bullish_sentiment_ratio: number
-    bearish_sentiment_ratio: number
-    score: number
-  }
+  let app = $state<App | null>(null)
+  let hostContext = $state<McpUiHostContext | undefined>()
 
   let stories = $state<Story[]>([])
   let timePeriod = $state('')
   let loading = $state(true)
 
-  onMount(async () => {
-    onToolResult(async (data) => {
-      if (!data) return
-      loading = false
-      timePeriod = data.time_period ?? ''
-      const periods = data.trending_stories ?? []
-      stories = periods.length ? (periods[periods.length - 1].top_stories ?? []) : []
-      await tick()
-      sendSizeChanged()
-    })
+  $effect(() => {
+    if (hostContext?.theme) applyDocumentTheme(hostContext.theme)
+    if (hostContext?.styles?.variables) applyHostStyleVariables(hostContext.styles.variables)
+    if (hostContext?.styles?.css?.fonts) applyHostFonts(hostContext.styles.css.fonts)
+  })
 
-    await initMcpApp()
+  function ingest(result: CallToolResult) {
+    const data = result.structuredContent as TrendingStoriesData | undefined
+    if (!data) return
+    timePeriod = data.time_period ?? ''
+    const periods = Array.isArray(data.trending_stories) ? data.trending_stories : []
+    stories = periods.length ? (periods.at(-1)?.top_stories ?? []) : []
+    loading = false
+  }
+
+  onMount(async () => {
+    const instance = new App(
+      { name: 'santiment-social-trends', version: '1.0.0' },
+      { availableDisplayModes: ['inline'] },
+    )
+
+    instance.ontoolresult = ingest
+    instance.onerror = console.error
+    instance.onhostcontextchanged = (params) => {
+      hostContext = { ...hostContext, ...params }
+    }
+
+    await instance.connect()
+    app = instance
+    hostContext = instance.getHostContext()
     loading = false
   })
 
-  function onStoryClick(story: Story) {
-    request('ui/message', {
-      content: [{ type: 'text', text: `Tell me more about: "${story.title}"` }],
-    })
+  async function onStoryClick(story: Story) {
+    if (!app) return
+    try {
+      await app.sendMessage({
+        role: 'user',
+        content: [{ type: 'text', text: `Tell me more about: "${story.title}"` }],
+      })
+    } catch (e) {
+      console.error('sendMessage failed', e)
+    }
   }
 </script>
 

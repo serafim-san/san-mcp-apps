@@ -1,4 +1,6 @@
-export const MOCK_DATA = {
+import type { TrendingStoriesData } from '../widgets/social-trends/contract'
+
+export const MOCK_DATA: TrendingStoriesData = {
   time_period: '1h',
   size: 3,
   period_start: new Date(Date.now() - 3600_000).toISOString(),

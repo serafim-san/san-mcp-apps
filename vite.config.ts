@@ -5,6 +5,11 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [svelte()],
 
+  // Absolute base URL for production builds so the MCP server can serve the
+  // bundled HTML as-is — no path rewriting on the backend.
+  // Leave empty/relative for dev (harness runs same-origin).
+  base: process.env.PUBLIC_BASE_URL ?? "/",
+
   define: {
     "process.env.BACKEND_URL": JSON.stringify(
       process.env.BACKEND_URL || "https://api-stage.santiment.net",
@@ -23,9 +28,9 @@ export default defineConfig({
         "social-trends": resolve(__dirname, "widgets/social-trends.html"),
       },
       output: {
-        entryFileNames: "[name]/main.js",
-        chunkFileNames: "chunks/[name].js",
-        assetFileNames: "[name][extname]",
+        entryFileNames: "[name]/main-[hash].js",
+        chunkFileNames: "chunks/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
   },
