@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "PUBLIC_BASE_URL=https://san-mcp-apps-serafim-san-serafim-sans-projects.vercel.app pnpm build",
+  "buildCommand": "PUBLIC_BASE_URL=https://san-mcp-apps.vercel.app pnpm build",
   "outputDirectory": "dist"
 }
