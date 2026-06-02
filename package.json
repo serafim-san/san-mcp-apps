@@ -23,6 +23,7 @@
     "@melt-ui/svelte": "^0.86.6",
     "@modelcontextprotocol/ext-apps": "^1.7.2",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@santiment-network/chart-next": "npm:@santiment-network/chart@^1.0.22",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.14",
     "san-webkit-next": "github:santiment/san-webkit#lib-64bf6a43-070526",

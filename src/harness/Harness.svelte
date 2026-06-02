@@ -1,19 +1,42 @@
 <script lang="ts">
   import Button from "san-webkit-next/ui/core/Button";
-  import { MOCK_DATA } from "./mock-data";
-  import type { TrendingStoriesData } from "../widgets/social-trends/contract";
+  import { MOCK_DATA as TRENDING_MOCK } from "./mock-data";
+  import { BITCOIN_MOCK } from "./bitcoin-price-mock";
 
+  type WidgetConfig = {
+    label: string;
+    url: string;
+    mock: unknown;
+    args: object;
+  };
+
+  const WIDGETS: Record<string, WidgetConfig> = {
+    "social-trends": {
+      label: "Social Trends",
+      url: "/widgets/social-trends.html",
+      mock: TRENDING_MOCK,
+      args: { time_period: "1h" },
+    },
+    "bitcoin-price": {
+      label: "Bitcoin Price",
+      url: "/widgets/bitcoin-price.html",
+      mock: BITCOIN_MOCK,
+      args: { symbol: "BTC", resolution: "1h" },
+    },
+  };
+
+  let selected = $state<keyof typeof WIDGETS>("social-trends");
   let iframeEl = $state<HTMLIFrameElement>();
-  let widgetUrl = $state("/widgets/social-trends.html");
   let iframeHeight = $state(0);
+
+  const current = $derived(WIDGETS[selected]);
 
   function postToWidget(method: string, params: object) {
     iframeEl?.contentWindow?.postMessage({ jsonrpc: "2.0", method, params }, "*");
   }
 
-  function deliverToolResult(data: TrendingStoriesData) {
-    // Real Claude sends tool-input first, then tool-result.
-    postToWidget("ui/notifications/tool-input", { arguments: { time_period: data.time_period } });
+  function deliverToolResult(data: unknown, args: object) {
+    postToWidget("ui/notifications/tool-input", { arguments: args });
     postToWidget("ui/notifications/tool-result", {
       content: [{ type: "text", text: JSON.stringify(data) }],
       structuredContent: data,
@@ -42,7 +65,7 @@
     }
 
     if (msg.method === "ui/notifications/initialized") {
-      deliverToolResult(MOCK_DATA);
+      deliverToolResult(current.mock, current.args);
     }
 
     if (msg.method === "ui/notifications/size-changed" && msg.params?.height) {
@@ -50,7 +73,6 @@
     }
 
     if (msg.method === "ui/message" && msg.id != null) {
-      // Acknowledge sendMessage from widget so its promise resolves.
       iframeEl?.contentWindow?.postMessage(
         { jsonrpc: "2.0", id: msg.id, result: {} },
         "*",
@@ -58,6 +80,11 @@
       console.info("[harness] widget sent message:", msg.params);
     }
   });
+
+  function switchWidget(key: keyof typeof WIDGETS) {
+    iframeHeight = 0;
+    selected = key;
+  }
 </script>
 
 <div class="night-mode flex h-screen bg-white overflow-hidden">
@@ -69,29 +96,26 @@
       Simulates Claude.ai host. Widget receives data via postMessage.
     </p>
 
+    <label class="flex flex-col gap-1 text-xs text-waterloo">
+      Widget
+      <select
+        bind:value={selected}
+        onchange={() => switchWidget(selected)}
+        class="px-2 py-1.5 bg-white border border-porcelain rounded text-xs text-rhino focus:outline-none focus:border-green"
+      >
+        {#each Object.entries(WIDGETS) as [key, config]}
+          <option value={key}>{config.label}</option>
+        {/each}
+      </select>
+    </label>
+
     <Button
       variant="fill"
       class="w-full justify-start focus:outline-none"
-      onclick={() => deliverToolResult(MOCK_DATA)}
+      onclick={() => deliverToolResult(current.mock, current.args)}
     >
       ↺ Resend mock data
     </Button>
-
-    <Button
-      variant="border"
-      class="w-full justify-start text-rhino focus:outline-none"
-      onclick={() => deliverToolResult({ ...MOCK_DATA, trending_stories: [] })}
-    >
-      Send empty data
-    </Button>
-
-    <label class="flex flex-col gap-1 text-xs text-waterloo">
-      Widget URL
-      <input
-        bind:value={widgetUrl}
-        class="px-2 py-1.5 bg-white border border-porcelain rounded text-xs text-rhino focus:outline-none focus:border-green"
-      />
-    </label>
   </aside>
 
   <main class="flex-1 flex items-center justify-center bg-athens overflow-auto">
@@ -100,7 +124,7 @@
     >
       <iframe
         bind:this={iframeEl}
-        src={widgetUrl}
+        src={current.url}
         title="Widget preview"
         sandbox="allow-scripts allow-same-origin"
         class="w-full border-none block"

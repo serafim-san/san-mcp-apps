@@ -26,6 +26,7 @@ export default defineConfig({
       input: {
         harness: resolve(__dirname, "index.html"),
         "social-trends": resolve(__dirname, "widgets/social-trends.html"),
+        "bitcoin-price": resolve(__dirname, "widgets/bitcoin-price.html"),
       },
       output: {
         entryFileNames: "[name]/main-[hash].js",
