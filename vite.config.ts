@@ -2,12 +2,25 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { resolve } from "path";
 
+const lib = (file: string) => resolve(__dirname, "lib", file);
+
 export default defineConfig({
   plugins: [svelte()],
 
-  // Absolute base URL for production builds so the MCP server can serve the
-  // bundled HTML as-is — no path rewriting on the backend.
-  // Leave empty/relative for dev (harness runs same-origin).
+  root: resolve(__dirname, "src"),
+  publicDir: resolve(__dirname, "static"),
+
+  resolve: {
+    alias: [
+      {
+        find: /^\$app\/(state|navigation)$/,
+        replacement: lib("sveltekit-noop.ts"),
+      },
+      { find: "$app/stores", replacement: lib("sveltekit-stores.ts") },
+      { find: "@sentry/sveltekit", replacement: lib("sveltekit-noop.ts") },
+    ],
+  },
+
   base: process.env.PUBLIC_BASE_URL ?? "/",
 
   define: {
@@ -22,11 +35,13 @@ export default defineConfig({
   },
 
   build: {
+    outDir: resolve(__dirname, "dist"),
+    emptyOutDir: true,
     rollupOptions: {
       input: {
-        harness: resolve(__dirname, "index.html"),
-        "social-trends": resolve(__dirname, "widgets/social-trends.html"),
-        "bitcoin-price": resolve(__dirname, "widgets/bitcoin-price.html"),
+        harness: resolve(__dirname, "src/index.html"),
+        "social-trends": resolve(__dirname, "src/widgets/social-trends.html"),
+        chart: resolve(__dirname, "src/widgets/chart.html"),
       },
       output: {
         entryFileNames: "[name]/main-[hash].js",

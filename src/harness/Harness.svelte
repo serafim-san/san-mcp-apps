@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from "san-webkit-next/ui/core/Button";
-  import { MOCK_DATA as TRENDING_MOCK } from "./mock-data";
-  import { BITCOIN_MOCK } from "./bitcoin-price-mock";
+  import { MOCK_DATA as TRENDING_MOCK } from "../widgets/social-trends/mock";
+  import { CHART_MOCK } from "../widgets/chart/mock";
 
   type WidgetConfig = {
     label: string;
@@ -17,11 +17,11 @@
       mock: TRENDING_MOCK,
       args: { time_period: "1h" },
     },
-    "bitcoin-price": {
-      label: "Bitcoin Price",
-      url: "/widgets/bitcoin-price.html",
-      mock: BITCOIN_MOCK,
-      args: { symbol: "BTC", resolution: "1h" },
+    chart: {
+      label: "Chart",
+      url: "/widgets/chart.html",
+      mock: CHART_MOCK,
+      args: { slug: "bitcoin", primary: "price", overlay: "social_volume_total", range: "7d" },
     },
   };
 

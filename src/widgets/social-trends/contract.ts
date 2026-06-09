@@ -9,6 +9,8 @@
  * `output_schema` so Claude can validate.
  */
 
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+
 export type Story = {
   title: string
   summary: string
@@ -31,4 +33,12 @@ export type TrendingStoriesData = {
   period_end?: string
   total_time_periods: number
   trending_stories: TimePeriod[]
+}
+
+/** Narrow a tool result into `TrendingStoriesData`, or return `null`. */
+export function parseTrendingStories(result: CallToolResult): TrendingStoriesData | null {
+  const sc = result.structuredContent as Partial<TrendingStoriesData> | undefined
+  if (!sc || typeof sc !== 'object') return null
+  if (!Array.isArray(sc.trending_stories)) return null
+  return sc as TrendingStoriesData
 }

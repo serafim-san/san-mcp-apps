@@ -6,7 +6,6 @@ export default {
     ...tailwindConfig.content,
     './node_modules/san-webkit-next/dist/**/*.{js,svelte}',
     './src/**/*.{html,js,svelte,ts}',
-    './widgets/**/*.html',
-    './index.html',
+    './lib/**/*.{js,ts}',
   ],
 }

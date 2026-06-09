@@ -1,88 +1,76 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import {
-    App,
-    applyDocumentTheme,
-    applyHostFonts,
-    applyHostStyleVariables,
-    type McpUiHostContext,
-  } from '@modelcontextprotocol/ext-apps'
-  import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
-  import StoryCard from './StoryCard.svelte'
-  import type { Story, TrendingStoriesData } from './contract'
+  import { sluggify } from "san-webkit-next/utils/url";
+  import StoryCard from "./StoryCard.svelte";
+  import WidgetShell from "../../lib/WidgetShell.svelte";
+  import { useMcpApp } from "../../lib/useMcpApp.svelte";
+  import { parseTrendingStories, type Story } from "./contract";
 
-  let app = $state<App | null>(null)
-  let hostContext = $state<McpUiHostContext | undefined>()
+  const SANTIMENT_TRENDS_BASE = "https://app.santiment.net/labs/trends/explore";
+  const SANTIMENT_SOCIAL_TRENDS = "https://app.santiment.net/social-trends";
 
-  let stories = $state<Story[]>([])
-  let timePeriod = $state('')
-  let loading = $state(true)
+  const { mcpApp } = useMcpApp({
+    name: "santiment-social-trends",
+    parse: parseTrendingStories,
+  });
 
-  $effect(() => {
-    if (hostContext?.theme) applyDocumentTheme(hostContext.theme)
-    if (hostContext?.styles?.variables) applyHostStyleVariables(hostContext.styles.variables)
-    if (hostContext?.styles?.css?.fonts) applyHostFonts(hostContext.styles.css.fonts)
-  })
+  const stories = $derived<Story[]>(
+    mcpApp.$.data?.trending_stories?.at(-1)?.top_stories ?? [],
+  );
 
-  function ingest(result: CallToolResult) {
-    const data = result.structuredContent as TrendingStoriesData | undefined
-    if (!data) return
-    timePeriod = data.time_period ?? ''
-    const periods = Array.isArray(data.trending_stories) ? data.trending_stories : []
-    stories = periods.length ? (periods.at(-1)?.top_stories ?? []) : []
-    loading = false
-  }
-
-  onMount(async () => {
-    const instance = new App(
-      { name: 'santiment-social-trends', version: '1.0.0' },
-      { availableDisplayModes: ['inline'] },
-    )
-
-    instance.ontoolresult = ingest
-    instance.onerror = console.error
-    instance.onhostcontextchanged = (params) => {
-      hostContext = { ...hostContext, ...params }
-    }
-
-    await instance.connect()
-    app = instance
-    hostContext = instance.getHostContext()
-    loading = false
-  })
-
-  async function onStoryClick(story: Story) {
-    if (!app) return
-    try {
-      await app.sendMessage({
-        role: 'user',
-        content: [{ type: 'text', text: `Tell me more about: "${story.title}"` }],
-      })
-    } catch (e) {
-      console.error('sendMessage failed', e)
-    }
+  function openStoryOnSantiment(story: Story) {
+    const slug = sluggify(story.query || story.title);
+    if (slug) mcpApp.openLink(`${SANTIMENT_TRENDS_BASE}/${slug}`);
   }
 </script>
 
-<div class="night-mode bg-white p-4">
-  <header class="flex items-center gap-2 mb-4">
-    <h2 class="text-base font-semibold text-rhino">📈 Social Trends</h2>
-    {#if timePeriod}
-      <span class="text-xs font-medium bg-green px-2 py-0.5 rounded text-white-day">{timePeriod}</span>
-    {/if}
-  </header>
+{#key mcpApp.isNightMode$}
+  <WidgetShell
+    title="📈 Social Trends"
+    badge={mcpApp.$.data?.time_period}
+    isNightMode={mcpApp.isNightMode$}
+    loading={mcpApp.$.loading}
+    error={mcpApp.$.error}
+    empty={stories.length === 0}
+    emptyMessage="No trending stories found."
+  >
+    {#snippet loadingSkeleton()}
+      <ul class="flex flex-col gap-2.5 list-none">
+        {#each Array(3) as _}
+          <li
+            class="border border-porcelain rounded-lg px-3.5 py-3 flex flex-col gap-2"
+          >
+            <div class="skeleton h-4 w-3/4"></div>
+            <div class="flex gap-3 mt-1.5">
+              <div class="skeleton h-3 w-16"></div>
+              <div class="skeleton h-3 w-16"></div>
+              <div class="skeleton h-3 w-20"></div>
+            </div>
+          </li>
+        {/each}
+      </ul>
+      <div class="mt-4 flex justify-end">
+        <div class="skeleton h-3 w-40"></div>
+      </div>
+    {/snippet}
 
-  {#if loading}
-    <p class="text-center py-10 text-sm text-waterloo">Loading…</p>
-  {:else if stories.length === 0}
-    <p class="text-center py-8 text-sm text-waterloo">No trending stories found.</p>
-  {:else}
     <ul class="flex flex-col gap-2.5 list-none">
       {#each stories as story}
         <li>
-          <StoryCard {story} onclick={() => onStoryClick(story)} />
+          <StoryCard {story} onclick={() => openStoryOnSantiment(story)} />
         </li>
       {/each}
     </ul>
-  {/if}
-</div>
+
+    {#snippet footer()}
+      <div class="mt-4 flex justify-end">
+        <button
+          type="button"
+          onclick={() => mcpApp.openLink(SANTIMENT_SOCIAL_TRENDS)}
+          class="text-xs font-medium text-green hover:underline focus-visible:outline-2 focus-visible:outline-green focus-visible:outline-offset-2 rounded"
+        >
+          See more social trends on Santiment →
+        </button>
+      </div>
+    {/snippet}
+  </WidgetShell>
+{/key}

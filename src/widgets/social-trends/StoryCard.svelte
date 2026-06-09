@@ -14,7 +14,7 @@
   const bear = $derived(Math.round((story.bearish_sentiment_ratio ?? 0) * 100))
 
   const card = tv({
-    base: 'w-full text-left border border-porcelain rounded-lg px-3.5 py-3 transition-colors hover:border-green',
+    base: 'w-full text-left border border-porcelain rounded-lg px-3.5 py-3 transition-colors hover:border-green focus-visible:border-green focus-visible:outline-2 focus-visible:outline-green focus-visible:outline-offset-1',
   })
 </script>
 

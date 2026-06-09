@@ -1,9 +1,11 @@
-import type { TrendingStoriesData } from '../widgets/social-trends/contract'
+import type { TrendingStoriesData } from './contract'
+
+const HOUR_MS = 60 * 60 * 1000
 
 export const MOCK_DATA: TrendingStoriesData = {
   time_period: '1h',
   size: 3,
-  period_start: new Date(Date.now() - 3600_000).toISOString(),
+  period_start: new Date(Date.now() - HOUR_MS).toISOString(),
   period_end: new Date().toISOString(),
   total_time_periods: 1,
   trending_stories: [
