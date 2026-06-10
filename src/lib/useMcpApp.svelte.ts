@@ -1,11 +1,12 @@
 import { onMount } from "svelte";
 import { App, type McpUiHostContext } from "@modelcontextprotocol/ext-apps";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 export type McpAppOptions<T> = {
   name: string;
   parse: (result: CallToolResult) => T | null;
 };
+
+export type CallToolResult = Parameters<NonNullable<App["ontoolresult"]>>[0];
 
 type McpAppState<T> = {
   data: T | null;
@@ -48,7 +49,6 @@ export function useMcpApp<T>(opts: McpAppOptions<T>) {
     };
 
     app.onerror = (e) => {
-      console.error("useMcpApp: SDK error", e);
       state.error = e instanceof Error ? e.message : String(e);
     };
 

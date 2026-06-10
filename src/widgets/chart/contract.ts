@@ -8,14 +8,10 @@
  * uses natively for `UTCTimestamp`).
  */
 
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { TChartMetric } from "san-webkit-next/ctx/metrics-registry/types";
 
 export type SeriesStyle = "candles" | "line" | "area" | "histogram";
-
-/** Same shape as webkit's internal `TMetricUnit` (not directly exported). */
 export type Unit = NonNullable<TChartMetric["unit"]>;
-
 export type SeriesId = "primary" | "overlay";
 
 export type CandlePoint = {
@@ -63,14 +59,19 @@ export type ChartData = {
   warning?: string;
 };
 
-/**
- * Narrow a tool result into a typed `ChartData`. Returns `null` for missing
- * or malformed payloads — UI will surface the empty state instead of
- * crashing in the renderer.
- */
-export function parseChartData(result: CallToolResult): ChartData | null {
+export interface GenericToolResult {
+  structuredContent?: unknown;
+  [key: string]: any;
+}
+
+export function parseChartData(
+  result: GenericToolResult | null | undefined,
+): ChartData | null {
+  if (!result || typeof result !== "object") return null;
+
   const sc = result.structuredContent as Partial<ChartData> | undefined;
   if (!sc || typeof sc !== "object") return null;
   if (typeof sc.slug !== "string" || !Array.isArray(sc.series)) return null;
+
   return sc as ChartData;
 }
