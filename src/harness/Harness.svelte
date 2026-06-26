@@ -21,7 +21,18 @@
       label: "Chart",
       url: "/widgets/chart.html",
       mock: CHART_MOCK,
-      args: { slug: "bitcoin", primary: "price", overlay: "social_volume_total", range: "7d" },
+      args: {
+        slug: "bitcoin",
+        primary: "price",
+        overlay: "social_volume_total",
+        range: "7d",
+      },
+    },
+    social_chart: {
+      label: "Social chart",
+      url: "/widgets/social-chart.html",
+      mock: CHART_MOCK,
+      args: { time_period: "1h" },
     },
   };
 
@@ -32,7 +43,10 @@
   const current = $derived(WIDGETS[selected]);
 
   function postToWidget(method: string, params: object) {
-    iframeEl?.contentWindow?.postMessage({ jsonrpc: "2.0", method, params }, "*");
+    iframeEl?.contentWindow?.postMessage(
+      { jsonrpc: "2.0", method, params },
+      "*",
+    );
   }
 
   function deliverToolResult(data: unknown, args: object) {
